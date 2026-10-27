@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI 학습 퀴즈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e6f1ff; --card:#ffffff; --ink:#12305c; --sub:#4d6a94;
+  --blue:#2f7bff; --blue-d:#1b5fd9; --soft:#dbeafe; --line:#bcd6fb;
+  --ok:#1f9d63; --okbg:#d6f5e5; --no:#d93a40; --nobg:#fde0e1; --onblue:#ffffff;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1a30; --card:#142845; --ink:#e8f1ff; --sub:#9db8e0;
+    --blue:#4b8dff; --blue-d:#6aa1ff; --soft:#1d3a66; --line:#2a4d82;
+    --ok:#5fd9a0; --okbg:#12392a; --no:#ff7a80; --nobg:#4a1c20; --onblue:#06152e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1a30; --card:#142845; --ink:#e8f1ff; --sub:#9db8e0;
+  --blue:#4b8dff; --blue-d:#6aa1ff; --soft:#1d3a66; --line:#2a4d82;
+  --ok:#5fd9a0; --okbg:#12392a; --no:#ff7a80; --nobg:#4a1c20; --onblue:#06152e;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Jua","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  font-size:20px; line-height:1.4;
+  display:flex; justify-content:center; padding:20px 16px 32px;
+}
+.app{width:100%; max-width:480px}
+.card{
+  background:var(--card); border:3px solid var(--line);
+  border-radius:28px; padding:28px 22px;
+}
+.hidden{display:none !important}
+h1{font-size:2rem; margin:0 0 6px; text-align:center}
+.subtitle{margin:0 0 26px; text-align:center; color:var(--sub); font-size:1.05rem}
+label{display:block; margin-bottom:8px; font-size:1.05rem}
+input{
+  width:100%; font:inherit; font-size:1.25rem; color:var(--ink);
+  background:var(--bg); border:3px solid var(--line); border-radius:18px;
+  padding:14px 16px; outline:none;
+}
+input:focus{border-color:var(--blue)}
+.btn{
+  display:block; width:100%; font:inherit; font-size:1.35rem;
+  border:0; border-radius:999px; padding:16px 20px; margin-top:20px;
+  background:var(--blue); color:var(--onblue); cursor:pointer;
+  box-shadow:0 5px 0 var(--blue-d);
+}
+.btn,.choice{transition:transform .15s ease, border-color .15s}
+.btn:hover{transform:scale(1.03)}
+.btn:active{transform:scale(1.07)}
+.btn:focus-visible,.choice:focus-visible{outline:4px solid var(--ink); outline-offset:3px}
+.btn.alt{background:var(--soft); color:var(--ink); box-shadow:0 5px 0 var(--line)}
+.err{color:var(--no); min-height:1.4em; margin:8px 0 0; font-size:1rem}
+.bar{height:14px; background:var(--soft); border-radius:99px; overflow:hidden}
+.bar>i{display:block; height:100%; width:0; background:var(--blue); border-radius:99px; transition:width .3s}
+.count{display:flex; justify-content:space-between; margin:0 0 10px; color:var(--sub); font-size:1.05rem}
+.qbox{text-align:center; margin:26px 0 20px}
+.emoji{font-size:3.2rem; line-height:1.1}
+.qtext{font-size:1.5rem; margin:8px 0 0; word-break:keep-all}
+.choices{display:grid; gap:12px}
+.choice{
+  font:inherit; font-size:1.3rem; text-align:left; color:var(--ink);
+  background:var(--card); border:3px solid var(--line); border-radius:20px;
+  padding:14px 16px; cursor:pointer; display:flex; align-items:center; gap:12px;
+}
+.choice b{
+  flex:none; width:36px; height:36px; border-radius:50%;
+  background:var(--soft); display:grid; place-items:center; font-weight:400; font-size:1.1rem;
+}
+.choice:not(:disabled):hover{transform:scale(1.02)}
+.choice:not(:disabled):active{border-color:var(--blue); transform:scale(1.05)}
+.choice.pop{animation:pop .3s ease}
+@keyframes pop{50%{transform:scale(1.07)}}
+.choice:disabled{cursor:default}
+.choice.correct{background:var(--okbg); border-color:var(--ok)}
+.choice.correct b{background:var(--ok); color:var(--card)}
+.choice.wrong{background:var(--nobg); border-color:var(--no)}
+.choice.wrong b{background:var(--no); color:var(--card)}
+.fb{min-height:1.6em; margin:16px 0 0; text-align:center; font-size:1.2rem}
+.fb.ok{color:var(--ok)} .fb.no{color:var(--no)}
+.exp{margin:16px 0 0; padding:14px 16px; background:var(--soft); border-radius:18px; font-size:1.05rem; word-break:keep-all}
+.exp::before{content:"💡 "}
+.pct{font-size:1.7rem; margin:10px 0 0; color:var(--blue)}
+@media (prefers-reduced-motion:reduce){.btn,.choice{transition:none}.choice.pop{animation:none}.btn:hover,.btn:active,.choice:hover,.choice:active{transform:none}}
+.result{text-align:center}
+.big{font-size:4.2rem; margin:10px 0 0; line-height:1.1}
+.big small{font-size:1.8rem; color:var(--sub)}
+.stars{font-size:2.2rem; margin:8px 0}
+.msg{margin:6px 0 0}
+</style>
+</head>
+<body>
+<main class="app">
+
+  <section id="start" class="card">
+    <h1>🎓 AI 학습 퀴즈</h1>
+    <p class="subtitle">영어 · 초등학생 기본 필수 단어</p>
+    <label for="name">이름을 알려주세요</label>
+    <input id="name" type="text" maxlength="10" placeholder="이름 입력" autocomplete="off">
+    <p class="err" id="err"></p>
+    <button class="btn" id="startBtn">시작</button>
+  </section>
+
+  <section id="quiz" class="card hidden">
+    <div class="count"><span id="who"></span><span id="num"></span></div>
+    <div class="bar"><i id="fill"></i></div>
+    <div class="qbox">
+      <div class="emoji" id="emoji"></div>
+      <p class="qtext" id="qtext"></p>
+    </div>
+    <div class="choices" id="choices"></div>
+    <p class="exp hidden" id="exp"></p>
+    <p class="fb" id="fb" aria-live="polite"></p>
+    <button class="btn hidden" id="nextBtn">다음</button>
+  </section>
+
+  <section id="result" class="card result hidden">
+    <h1 id="rTitle"></h1>
+    <div class="stars" id="stars"></div>
+    <p class="big"><span id="score"></span><small> / 5</small></p>
+    <p class="pct" id="pct"></p>
+    <p class="msg" id="rMsg"></p>
+    <button class="btn" id="againBtn">다시 하기</button>
+  </section>
+
+</main>
+
+<script>
+// 문제 은행: 초등 영어 기본 필수 단어 (매번 5문제를 무작위로 뽑아요)
+const QUESTIONS = [
+  {emoji:"🍎", q:"“apple”은 무슨 뜻일까요?", choices:["사과","바나나","포도","귤"], answer:0, exp:"apple은 ‘사과’예요. 빨갛고 달콤한 과일이죠!"},
+  {emoji:"🐶", q:"“강아지”는 영어로 무엇일까요?", choices:["cat","dog","bird","fish"], answer:1, exp:"dog은 ‘강아지’예요. cat은 고양이, bird는 새, fish는 물고기예요."},
+  {emoji:"🏫", q:"“학교”는 영어로 무엇일까요?", choices:["school","book","bag","desk"], answer:0, exp:"school은 ‘학교’예요. book은 책, bag은 가방, desk는 책상이에요."},
+  {emoji:"🔴", q:"“red”는 무슨 색일까요?", choices:["파란색","노란색","빨간색","초록색"], answer:2, exp:"red는 ‘빨간색’이에요. blue는 파란색, yellow는 노란색, green은 초록색이에요."},
+  {emoji:"👩", q:"“mother”는 누구일까요?", choices:["아빠","언니","할머니","엄마"], answer:3, exp:"mother는 ‘엄마’예요. father는 아빠, sister는 언니(누나), grandmother는 할머니예요."},
+  {emoji:"📚", q:"“책”은 영어로 무엇일까요?", choices:["pen","ruler","eraser","book"], answer:3, exp:"book은 ‘책’이에요. pen은 펜, ruler는 자, eraser는 지우개예요."},
+  {emoji:"💧", q:"“water”는 무슨 뜻일까요?", choices:["우유","물","주스","차"], answer:1, exp:"water는 ‘물’이에요. milk는 우유, juice는 주스, tea는 차예요."},
+  {emoji:"3️⃣", q:"“three”는 숫자 몇일까요?", choices:["2","5","3","8"], answer:2, exp:"three는 숫자 3이에요. two는 2, five는 5, eight는 8이에요."},
+  {emoji:"😊", q:"“happy”는 무슨 뜻일까요?", choices:["슬픈","화난","졸린","행복한"], answer:3, exp:"happy는 ‘행복한’이에요. sad는 슬픈, angry는 화난, sleepy는 졸린이에요."},
+  {emoji:"📅", q:"“Monday”는 무슨 요일일까요?", choices:["월요일","화요일","금요일","일요일"], answer:0, exp:"Monday는 ‘월요일’이에요. Tuesday는 화요일, Friday는 금요일, Sunday는 일요일이에요."}
+];
+const TOTAL = 5;
+const $ = id => document.getElementById(id);
+const screens = ["start","quiz","result"];
+let list = [], idx = 0, score = 0, locked = false, userName = "";
+
+function show(id){ screens.forEach(s => $(s).classList.toggle("hidden", s !== id)); window.scrollTo(0,0); }
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function begin(){
+  const n = $("name").value.trim();
+  if(!n){ $("err").textContent = "이름을 먼저 입력해 주세요!"; $("name").focus(); return; }
+  $("err").textContent = "";
+  userName = n; idx = 0; score = 0;
+  list = shuffle(QUESTIONS).slice(0, TOTAL).map(q => {
+    const correct = q.choices[q.answer];
+    const choices = shuffle(q.choices);
+    return {emoji:q.emoji, q:q.q, choices, answer:choices.indexOf(correct), exp:q.exp};
+  });
+  $("who").textContent = "👤 " + userName;
+  show("quiz"); render();
+}
+
+function render(){
+  const q = list[idx]; locked = false;
+  $("num").textContent = (idx+1) + " / " + TOTAL;
+  $("fill").style.width = (idx/TOTAL*100) + "%";
+  $("emoji").textContent = q.emoji;
+  $("qtext").textContent = q.q;
+  $("fb").textContent = ""; $("fb").className = "fb";
+  $("exp").classList.add("hidden");
+  $("nextBtn").classList.add("hidden");
+  $("nextBtn").textContent = idx === TOTAL-1 ? "결과 보기" : "다음";
+  const box = $("choices"); box.innerHTML = "";
+  q.choices.forEach((c,i) => {
+    const b = document.createElement("button");
+    b.className = "choice"; b.type = "button";
+    const k = document.createElement("b"); k.textContent = i+1;
+    const t = document.createElement("span"); t.textContent = c;
+    b.append(k,t);
+    b.addEventListener("click", () => pick(i));
+    box.appendChild(b);
+  });
+}
+
+function pick(i){
+  if(locked) return; locked = true;
+  const q = list[idx], btns = $("choices").children;
+  Array.from(btns).forEach(b => b.disabled = true);
+  btns[q.answer].classList.add("correct");
+  if(i === q.answer){
+    score++; $("fb").textContent = "🎉 정답이에요!"; $("fb").classList.add("ok");
+  } else {
+    btns[i].classList.add("wrong");
+    $("fb").textContent = "😢 아쉬워요! 정답은 “" + q.choices[q.answer] + "”";
+    $("fb").classList.add("no");
+  }
+  btns[i].classList.add("pop");
+  $("exp").textContent = q.exp;
+  $("exp").classList.remove("hidden");
+  $("fill").style.width = ((idx+1)/TOTAL*100) + "%";
+  $("nextBtn").classList.remove("hidden");
+  $("nextBtn").focus();
+}
+
+function next(){
+  if(idx < TOTAL-1){ idx++; render(); } else finish();
+}
+
+function finish(){
+  $("rTitle").textContent = userName + " 친구, 수고했어요!";
+  $("score").textContent = score;
+  $("stars").textContent = "⭐".repeat(score) + "☆".repeat(TOTAL-score);
+  const msgs = ["괜찮아요, 다시 도전해 봐요! 💪","조금만 더 하면 돼요! 💪","잘하고 있어요! 👍","아주 잘했어요! 👏","거의 다 맞혔어요! 🌟","완벽해요! 최고예요! 🏆"];
+  $("pct").textContent = "정답률 " + Math.round(score/TOTAL*100) + "%";
+  $("rMsg").textContent = msgs[score];
+  show("result");
+}
+
+$("startBtn").addEventListener("click", begin);
+$("name").addEventListener("keydown", e => { if(e.key === "Enter") begin(); });
+$("nextBtn").addEventListener("click", next);
+$("againBtn").addEventListener("click", () => { show("start"); $("name").focus(); });
+</script>
+</body>
+</html>
